@@ -153,26 +153,36 @@ const deleteByUserId = async (req, res) => {
         });
     }
 };
-const dummy=async(req,res)=>{
+const dummy = async (req, res) => {
     try {
-        const cachedKey="comment"
-        const cached=await redisClient.get(cachedKey);
-        if(cached){
-            return res.status(200).json({
-                message:"From Redis Cache",
-                comment:JSON.parse(cached)
-            })
-        }
-    const response = await fetch('https://dummyjson.com/comments');
+        const cachedKey = "comment"; // 🔑 Redis key
 
-    const data = await response.json();
-    redisClient.setEx(cachedKey,20,JSON.stringify(data));
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    res.status(500).json({ error: 'Failed to fetch data' });
-  }
-}
+        // 1️⃣ Try to get cached data from Redis
+        const cached = await redisClient.get(cachedKey);
+
+        if (cached) {
+            // 2️⃣ If cache exists, return the cached data
+            return res.status(200).json({
+                message: "From Redis Cache",
+                comment: JSON.parse(cached)
+            });
+        }
+
+        // 3️⃣ If cache doesn't exist, fetch from external API
+        const response = await fetch('https://dummyjson.com/comments');
+        const data = await response.json();
+
+        // 4️⃣ Store fetched data in Redis with 20s expiry
+        redisClient.setEx(cachedKey, 20, JSON.stringify(data));
+
+        // 5️⃣ Return the fresh data
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).json({ error: 'Failed to fetch data' });
+    }
+};
+
 module.exports = {
     register,
     userLogin,
