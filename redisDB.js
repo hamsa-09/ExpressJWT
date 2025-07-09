@@ -1,6 +1,6 @@
 const redis=require("redis");
 
-const redisClient=redis.createClient();
+const redisClient=redis.createClient({ url:'redis://red-d1n8ufemcj7s73br8ll0:6379' });
 
 redisClient.connect();
 
